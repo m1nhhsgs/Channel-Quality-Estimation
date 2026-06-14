@@ -1,0 +1,5 @@
+metric,value,note
+Accuracy,0.779,Overall Good/Critical classification accuracy
+F1 macro,0.7605,Average F1 over Good and Critical
+Critical precision,0.5366,"Among predicted Critical windows, fraction that are truly Critical"
+Critical recall,0.9813,"Among actual Critical windows, fraction detected as Critical"

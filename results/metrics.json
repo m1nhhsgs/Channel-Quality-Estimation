@@ -1,0 +1,72 @@
+{
+  "target": "packet_loss_future_2s",
+  "split_method": "group_by_scenario_id",
+  "rows_total": 11511,
+  "rows_train": 8583,
+  "rows_test": 2928,
+  "feature_columns": [
+    "rssi_mean_2s",
+    "rssi_min_2s",
+    "rssi_max_2s",
+    "rssi_std_2s",
+    "rssi_range_2s",
+    "rssi_last",
+    "rssi_delta_2s",
+    "rssi_slope_2s",
+    "packet_loss_past_2s",
+    "throughput_past_2s",
+    "inter_arrival_mean_2s",
+    "jitter_2s",
+    "entropy_rssi_2s",
+    "payload_size",
+    "packet_rate"
+  ],
+  "numeric_feature_columns": [
+    "rssi_mean_2s",
+    "rssi_min_2s",
+    "rssi_max_2s",
+    "rssi_std_2s",
+    "rssi_range_2s",
+    "rssi_last",
+    "rssi_delta_2s",
+    "rssi_slope_2s",
+    "packet_loss_past_2s",
+    "throughput_past_2s",
+    "inter_arrival_mean_2s",
+    "jitter_2s",
+    "entropy_rssi_2s",
+    "payload_size",
+    "packet_rate"
+  ],
+  "categorical_feature_columns": [],
+  "dropped_empty_features": [
+    "link_margin"
+  ],
+  "mae": 8.317254683317607,
+  "rmse": 13.116049745281874,
+  "r2": -0.6171073600307391,
+  "state_accuracy": 0.7790300546448088,
+  "state_f1_macro": 0.7604721430468915,
+  "state_labels": [
+    "Good",
+    "Critical"
+  ],
+  "confusion_matrix": [
+    [
+      1548,
+      633
+    ],
+    [
+      14,
+      733
+    ]
+  ],
+  "figure_files": [
+    "results/figures/training_curves.png",
+    "results/figures/prediction_vs_actual.png",
+    "results/figures/residual_histogram.png",
+    "results/figures/confusion_matrix.png",
+    "results/figures/feature_importance.png",
+    "results/figures/results.png"
+  ]
+}

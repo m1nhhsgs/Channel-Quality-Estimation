@@ -1,0 +1,16 @@
+feature,importance
+packet_loss_past_2s,0.4966509
+jitter_2s,0.0877412
+rssi_min_2s,0.07816807
+throughput_past_2s,0.071713656
+rssi_mean_2s,0.058755226
+packet_rate,0.035202537
+entropy_rssi_2s,0.033178248
+inter_arrival_mean_2s,0.032914184
+rssi_max_2s,0.027099714
+rssi_slope_2s,0.018542033
+rssi_std_2s,0.01774055
+rssi_range_2s,0.016769083
+rssi_last,0.01580797
+rssi_delta_2s,0.0097166635
+payload_size,0.0

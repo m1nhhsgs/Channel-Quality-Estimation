@@ -1,0 +1,6 @@
+metric,value,unit,note
+MAE,8.3173,percentage points,Lower is better
+RMSE,13.116,percentage points,Lower is better
+R2,-0.6171,,Higher is better
+Binary state accuracy,0.779,ratio,Good/Critical accuracy
+Binary F1 macro,0.7605,ratio,Average F1 over Good and Critical

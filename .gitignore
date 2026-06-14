@@ -1,0 +1,35 @@
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Local editor and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local runtime/temp files
+*.log
+tmp/
+temp/
+.ipynb_checkpoints/
+
+# Arduino/PlatformIO build output
+.pio/
+build/
+*.elf
+*.bin
+*.hex
+
+# Keep project data/model/result artifacts versionable for this repo.
+# The current dataset and trained model are small enough for GitHub and are
+# required for reproducing the report tables without collecting new ESP32 data.

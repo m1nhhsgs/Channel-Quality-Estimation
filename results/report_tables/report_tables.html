@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ESP-NOW Report Tables</title>
+<style>
+body{font-family:Arial,sans-serif;margin:32px;color:#111827;background:#fff}
+h1{font-size:24px;margin-bottom:6px}
+h2{font-size:18px;margin-top:28px;border-bottom:1px solid #d1d5db;padding-bottom:6px}
+p{color:#4b5563}
+table{border-collapse:collapse;width:100%;font-size:13px;margin-top:10px}
+th,td{border:1px solid #d1d5db;padding:6px 8px;text-align:left}
+th{background:#f3f4f6}
+tr:nth-child(even){background:#fafafa}
+code{background:#f3f4f6;padding:2px 4px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>ESP-NOW Packet Loss Prediction - Report Tables</h1>
+<p>Current model: XGBoost regressor without session metadata. Target: <code>packet_loss_future_2s</code>. State classes: <code>Good</code> and <code>Critical</code>.</p>
+<h2>1. Dataset Overview</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>item</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Raw sessions/runs in feature dataset</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>Sliding-window feature rows</td>
+      <td>11511</td>
+    </tr>
+    <tr>
+      <td>Feature columns used by current model</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <td>Window size</td>
+      <td>2 seconds</td>
+    </tr>
+    <tr>
+      <td>Step size</td>
+      <td>0.5 seconds</td>
+    </tr>
+    <tr>
+      <td>Prediction horizon</td>
+      <td>2 seconds</td>
+    </tr>
+    <tr>
+      <td>Target</td>
+      <td>packet_loss_future_2s</td>
+    </tr>
+    <tr>
+      <td>Train/test split</td>
+      <td>group_by_scenario_id</td>
+    </tr>
+    <tr>
+      <td>Train rows</td>
+      <td>8583</td>
+    </tr>
+    <tr>
+      <td>Test rows</td>
+      <td>2928</td>
+    </tr>
+    <tr>
+      <td>State classes</td>
+      <td>Good, Critical</td>
+    </tr>
+    <tr>
+      <td>Critical threshold</td>
+      <td>packet_loss_future_2s &gt;= 10%</td>
+    </tr>
+  </tbody>
+</table>
+<h2>2. Model Metrics</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>metric</th>
+      <th>value</th>
+      <th>unit</th>
+      <th>note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MAE</td>
+      <td>8.3173</td>
+      <td>percentage points</td>
+      <td>Lower is better</td>
+    </tr>
+    <tr>
+      <td>RMSE</td>
+      <td>13.1160</td>
+      <td>percentage points</td>
+      <td>Lower is better</td>
+    </tr>
+    <tr>
+      <td>R2</td>
+      <td>-0.6171</td>
+      <td>NaN</td>
+      <td>Higher is better</td>
+    </tr>
+    <tr>
+      <td>Binary state accuracy</td>
+      <td>0.7790</td>
+      <td>ratio</td>
+      <td>Good/Critical accuracy</td>
+    </tr>
+    <tr>
+      <td>Binary F1 macro</td>
+      <td>0.7605</td>
+      <td>ratio</td>
+      <td>Average F1 over Good and Critical</td>
+    </tr>
+  </tbody>
+</table>
+<h2>3. Confusion Matrix</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>actual_state</th>
+      <th>Good</th>
+      <th>Critical</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Good</td>
+      <td>1548</td>
+      <td>633</td>
+    </tr>
+    <tr>
+      <td>Critical</td>
+      <td>14</td>
+      <td>733</td>
+    </tr>
+  </tbody>
+</table>
+<h2>4. State Thresholds</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>state</th>
+      <th>packet_loss_future_2s</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Good</td>
+      <td>&lt; 10%</td>
+    </tr>
+    <tr>
+      <td>Critical</td>
+      <td>&gt;= 10%</td>
+    </tr>
+  </tbody>
+</table>
+<h2>5. Full Dataset State Distribution</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>state</th>
+      <th>rows</th>
+      <th>percent</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Good</td>
+      <td>6776</td>
+      <td>58.87</td>
+    </tr>
+    <tr>
+      <td>Critical</td>
+      <td>4735</td>
+      <td>41.13</td>
+    </tr>
+  </tbody>
+</table>
+<h2>6. Test State Distribution</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>state</th>
+      <th>rows</th>
+      <th>percent</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Good</td>
+      <td>2181</td>
+      <td>74.49</td>
+    </tr>
+    <tr>
+      <td>Critical</td>
+      <td>747</td>
+      <td>25.51</td>
+    </tr>
+  </tbody>
+</table>
+<h2>7. Test Performance By Run</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>scenario_id</th>
+      <th>rows</th>
+      <th>actual_loss_mean_pct</th>
+      <th>predicted_loss_mean_pct</th>
+      <th>mae</th>
+      <th>rmse</th>
+      <th>binary_state_accuracy</th>
+      <th>actual_good_rows</th>
+      <th>predicted_good_rows</th>
+      <th>actual_critical_rows</th>
+      <th>predicted_critical_rows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>run02</td>
+      <td>592</td>
+      <td>0.000</td>
+      <td>1.967</td>
+      <td>1.967</td>
+      <td>2.327</td>
+      <td>1.0000</td>
+      <td>592</td>
+      <td>592</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run03</td>
+      <td>593</td>
+      <td>0.034</td>
+      <td>1.920</td>
+      <td>1.913</td>
+      <td>2.274</td>
+      <td>1.0000</td>
+      <td>593</td>
+      <td>593</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run14</td>
+      <td>980</td>
+      <td>0.000</td>
+      <td>16.925</td>
+      <td>16.925</td>
+      <td>21.097</td>
+      <td>0.3694</td>
+      <td>980</td>
+      <td>362</td>
+      <td>0</td>
+      <td>618</td>
+    </tr>
+    <tr>
+      <td>run50</td>
+      <td>763</td>
+      <td>22.456</td>
+      <td>20.519</td>
+      <td>7.166</td>
+      <td>8.959</td>
+      <td>0.9620</td>
+      <td>16</td>
+      <td>15</td>
+      <td>747</td>
+      <td>748</td>
+    </tr>
+  </tbody>
+</table>
+<h2>8. Top 15 Feature Importance</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>importance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>packet_loss_past_2s</td>
+      <td>0.496651</td>
+    </tr>
+    <tr>
+      <td>jitter_2s</td>
+      <td>0.087741</td>
+    </tr>
+    <tr>
+      <td>rssi_min_2s</td>
+      <td>0.078168</td>
+    </tr>
+    <tr>
+      <td>throughput_past_2s</td>
+      <td>0.071714</td>
+    </tr>
+    <tr>
+      <td>rssi_mean_2s</td>
+      <td>0.058755</td>
+    </tr>
+    <tr>
+      <td>packet_rate</td>
+      <td>0.035203</td>
+    </tr>
+    <tr>
+      <td>entropy_rssi_2s</td>
+      <td>0.033178</td>
+    </tr>
+    <tr>
+      <td>inter_arrival_mean_2s</td>
+      <td>0.032914</td>
+    </tr>
+    <tr>
+      <td>rssi_max_2s</td>
+      <td>0.027100</td>
+    </tr>
+    <tr>
+      <td>rssi_slope_2s</td>
+      <td>0.018542</td>
+    </tr>
+    <tr>
+      <td>rssi_std_2s</td>
+      <td>0.017741</td>
+    </tr>
+    <tr>
+      <td>rssi_range_2s</td>
+      <td>0.016769</td>
+    </tr>
+    <tr>
+      <td>rssi_last</td>
+      <td>0.015808</td>
+    </tr>
+    <tr>
+      <td>rssi_delta_2s</td>
+      <td>0.009717</td>
+    </tr>
+    <tr>
+      <td>payload_size</td>
+      <td>0.000000</td>
+    </tr>
+  </tbody>
+</table>
+<h2>9. Binary Classification Details</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>metric</th>
+      <th>value</th>
+      <th>note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Accuracy</td>
+      <td>0.7790</td>
+      <td>Overall Good/Critical classification accuracy</td>
+    </tr>
+    <tr>
+      <td>F1 macro</td>
+      <td>0.7605</td>
+      <td>Average F1 over Good and Critical</td>
+    </tr>
+    <tr>
+      <td>Critical precision</td>
+      <td>0.5366</td>
+      <td>Among predicted Critical windows, fraction that are truly Critical</td>
+    </tr>
+    <tr>
+      <td>Critical recall</td>
+      <td>0.9813</td>
+      <td>Among actual Critical windows, fraction detected as Critical</td>
+    </tr>
+  </tbody>
+</table>
+<h2>10. Feature Dataset By Run</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>scenario_id</th>
+      <th>feature_rows</th>
+      <th>loss_mean_pct</th>
+      <th>loss_min_pct</th>
+      <th>loss_max_pct</th>
+      <th>good_rows</th>
+      <th>critical_rows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>run02</td>
+      <td>592</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>592</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run03</td>
+      <td>593</td>
+      <td>0.034</td>
+      <td>0.000</td>
+      <td>2.500</td>
+      <td>593</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run04</td>
+      <td>606</td>
+      <td>2.011</td>
+      <td>0.000</td>
+      <td>59.524</td>
+      <td>561</td>
+      <td>45</td>
+    </tr>
+    <tr>
+      <td>run05</td>
+      <td>1026</td>
+      <td>4.465</td>
+      <td>0.000</td>
+      <td>94.444</td>
+      <td>928</td>
+      <td>98</td>
+    </tr>
+    <tr>
+      <td>run13</td>
+      <td>594</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>594</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run14</td>
+      <td>980</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>980</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run15</td>
+      <td>602</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>602</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>run22</td>
+      <td>1239</td>
+      <td>3.740</td>
+      <td>0.000</td>
+      <td>52.632</td>
+      <td>1065</td>
+      <td>174</td>
+    </tr>
+    <tr>
+      <td>run23</td>
+      <td>644</td>
+      <td>7.527</td>
+      <td>0.000</td>
+      <td>29.268</td>
+      <td>452</td>
+      <td>192</td>
+    </tr>
+    <tr>
+      <td>run24</td>
+      <td>278</td>
+      <td>14.948</td>
+      <td>7.368</td>
+      <td>23.469</td>
+      <td>11</td>
+      <td>267</td>
+    </tr>
+    <tr>
+      <td>run25</td>
+      <td>177</td>
+      <td>24.995</td>
+      <td>18.644</td>
+      <td>32.558</td>
+      <td>0</td>
+      <td>177</td>
+    </tr>
+    <tr>
+      <td>run50</td>
+      <td>763</td>
+      <td>22.456</td>
+      <td>5.263</td>
+      <td>43.902</td>
+      <td>16</td>
+      <td>747</td>
+    </tr>
+    <tr>
+      <td>run51</td>
+      <td>865</td>
+      <td>31.279</td>
+      <td>10.256</td>
+      <td>62.791</td>
+      <td>0</td>
+      <td>865</td>
+    </tr>
+    <tr>
+      <td>run58</td>
+      <td>659</td>
+      <td>10.072</td>
+      <td>0.000</td>
+      <td>30.769</td>
+      <td>337</td>
+      <td>322</td>
+    </tr>
+    <tr>
+      <td>run59</td>
+      <td>291</td>
+      <td>17.454</td>
+      <td>10.377</td>
+      <td>23.585</td>
+      <td>0</td>
+      <td>291</td>
+    </tr>
+    <tr>
+      <td>run60</td>
+      <td>198</td>
+      <td>27.466</td>
+      <td>22.481</td>
+      <td>32.716</td>
+      <td>0</td>
+      <td>198</td>
+    </tr>
+    <tr>
+      <td>run61</td>
+      <td>734</td>
+      <td>18.723</td>
+      <td>2.564</td>
+      <td>52.500</td>
+      <td>45</td>
+      <td>689</td>
+    </tr>
+    <tr>
+      <td>run62</td>
+      <td>386</td>
+      <td>34.982</td>
+      <td>20.833</td>
+      <td>46.739</td>
+      <td>0</td>
+      <td>386</td>
+    </tr>
+    <tr>
+      <td>run63</td>
+      <td>284</td>
+      <td>47.439</td>
+      <td>37.500</td>
+      <td>57.480</td>
+      <td>0</td>
+      <td>284</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

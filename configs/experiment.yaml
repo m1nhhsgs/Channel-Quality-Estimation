@@ -1,0 +1,24 @@
+serial:
+  port: "/dev/ttyUSB0"
+  baudrate: 115200
+  timeout_sec: 1.0
+
+packet:
+  default_packet_rate_hz: 20
+  default_payload_size_bytes: 28
+
+replay:
+  default_csv: "data/raw/run02.csv"
+  interval_ms: 100
+
+metrics:
+  window_size_sec: 2.0
+  step_size_sec: 0.5
+  prediction_horizon_sec: 2.0
+  min_packets_per_window: 5
+  noise_floor_dbm: -95
+  bandwidth_hz: 1000000
+  efficiency: 0.25
+
+thresholds:
+  critical_min_loss_percent: 10.0

@@ -1,0 +1,29 @@
+{
+  "target": "packet_loss_future_2s",
+  "feature_columns": [
+    "rssi_mean_2s",
+    "rssi_min_2s",
+    "rssi_max_2s",
+    "rssi_std_2s",
+    "rssi_range_2s",
+    "rssi_last",
+    "rssi_delta_2s",
+    "rssi_slope_2s",
+    "packet_loss_past_2s",
+    "throughput_past_2s",
+    "inter_arrival_mean_2s",
+    "jitter_2s",
+    "entropy_rssi_2s",
+    "payload_size",
+    "packet_rate"
+  ],
+  "trace_columns": [
+    "scenario_id",
+    "window_start",
+    "window_end"
+  ],
+  "state_thresholds": {
+    "Good": "packet_loss < 10%",
+    "Critical": "packet_loss >= 10%"
+  }
+}

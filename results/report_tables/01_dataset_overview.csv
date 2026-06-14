@@ -1,0 +1,13 @@
+item,value
+Raw sessions/runs in feature dataset,19
+Sliding-window feature rows,11511
+Feature columns used by current model,15
+Window size,2 seconds
+Step size,0.5 seconds
+Prediction horizon,2 seconds
+Target,packet_loss_future_2s
+Train/test split,group_by_scenario_id
+Train rows,8583
+Test rows,2928
+State classes,"Good, Critical"
+Critical threshold,packet_loss_future_2s >= 10%

@@ -1,0 +1,13 @@
+session_id,received_rows,missing_packets,packet_loss_percent,path
+run22,6000,233,3.738,data/raw/run22.csv
+run23,6000,488,7.522,data/raw/run23.csv
+run24,6000,1059,15.002,data/raw/run24.csv
+run25,6000,2001,25.009,data/raw/run25.csv
+run50,6000,1740,22.481,data/raw/run50.csv
+run51,6000,2727,31.248,data/raw/run51.csv
+run58,6000,668,10.018,data/raw/run58.csv
+run59,6000,1275,17.526,data/raw/run59.csv
+run60,6000,2273,27.475,data/raw/run60.csv
+run61,6000,1385,18.754,data/raw/run61.csv
+run62,6000,3233,35.016,data/raw/run62.csv
+run63,6000,5423,47.474,data/raw/run63.csv

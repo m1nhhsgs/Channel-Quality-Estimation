@@ -1,0 +1,53 @@
+model:
+  type: "XGBoostRegressor"
+  output: "packet_loss_future_2s"
+  artifact: "models/xgboost_model.json"
+  pipeline_artifact: "models/xgboost_packet_loss_pipeline.joblib"
+  config: "models/model_config.json"
+  objective: "reg:squarederror"
+
+features:
+  order:
+    - rssi_mean_2s
+    - rssi_min_2s
+    - rssi_max_2s
+    - rssi_std_2s
+    - rssi_range_2s
+    - rssi_last
+    - rssi_delta_2s
+    - rssi_slope_2s
+    - packet_loss_past_2s
+    - throughput_past_2s
+    - inter_arrival_mean_2s
+    - jitter_2s
+    - entropy_rssi_2s
+    - payload_size
+    - packet_rate
+
+state:
+  classes:
+    - Good
+    - Critical
+  thresholds:
+    good: "packet_loss_future_2s < 10%"
+    critical: "packet_loss_future_2s >= 10%"
+
+sliding_window:
+  window_size_sec: 2.0
+  step_size_sec: 0.5
+  prediction_horizon_sec: 2.0
+
+xgboost:
+  n_estimators: 300
+  max_depth: 5
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  random_state: 42
+
+training:
+  test_split_mode: "by_run_or_scenario"
+  current_split_method: "group_by_scenario_id"
+  baseline:
+    - moving_average
+    - linear_regression

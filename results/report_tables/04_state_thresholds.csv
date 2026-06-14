@@ -1,0 +1,3 @@
+state,packet_loss_future_2s
+Good,< 10%
+Critical,>= 10%

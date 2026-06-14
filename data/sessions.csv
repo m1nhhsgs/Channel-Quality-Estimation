@@ -1,0 +1,22 @@
+session_id,start_time,location,distance_m,link_type,obstacle,send_interval_ms,channel,notes
+run02,2026-06-13T13:49:39,outdoor_open,15.0,LOS,none,50,1,short LOS
+run02,2026-06-13T13:51:50,outdoor_open,15.0,LOS,none,50,1,short LOS
+run03,2026-06-13T13:59:58,outdoor_open,30.0,LOS,none,50,1,medium LOS
+run04,2026-06-13T14:13:48,outdoor_open,40.0,LOS,none,50,1,long LOS
+run05,2026-06-13T14:24:02,outdoor_open,50.0,LOS,none,50,1,maximum LOS
+run12,2026-06-13T14:32:45,outdoor_open,10.0,NLOS,human_body,50,1,people walking/standing
+run13,2026-06-13T15:16:57,outdoor_open,20.0,NLOS,human_body,50,1,person walking/standing
+run14,2026-06-13T15:25:03,outdoor_open,30.0,NLOS,human_body,50,1,person walking/standing
+run15,2026-06-13T15:42:06,outdoor_open,5-50.0,NLOS,NLOS,50,1,sender moving slowly
+run22,2026-06-14T09:07:18,outdoor_open,30.0,LOS,none,100,1,low traffic with mild packet loss
+run23,2026-06-14T09:24:41,outdoor_open,30.0,LOS,none,50,1,default traffic with packet loss
+run24,2026-06-14T09:39:09,outdoor_open,30.0,LOS,none,20,1,high traffic packet loss
+run25,2026-06-14T09:51:32,outdoor_open,30.0,LOS,none,10,1,very high traffic packet loss
+run50,2026-06-14T10:13:26,outdoor,30.0,NLOS,tree_line,50,1,high interference hotspot close receiver
+run51,2026-06-14T10:31:58,outdoor,40.0,NLOS,object_block,50,1,object block and high interference
+run58,2026-06-14T10:54:17,outdoor_open,50.0,LOS,none,50,1,max LOS baseline with loss
+run59,2026-06-14T11:11:46,outdoor_open,50.0,LOS,none,20,1,max LOS higher packet rate
+run60,2026-06-14T11:24:08,outdoor_open,50.0,LOS,none,10,1,max LOS very high packet rate
+run61,2026-06-14T11:43:55,outdoor,40.0,NLOS,tree_line,50,1,NLOS tree line baseline
+run62,2026-06-14T12:01:23,outdoor,40.0,NLOS,tree_line,20,1,NLOS tree line higher rate and larger payload
+run63,2026-06-14T12:16:49,outdoor,40.0,NLOS,object_block,10,1,NLOS object block stress test

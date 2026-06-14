@@ -1,0 +1,67 @@
+{
+  "target": "packet_loss_future_2s",
+  "feature_columns": [
+    "rssi_mean_2s",
+    "rssi_min_2s",
+    "rssi_max_2s",
+    "rssi_std_2s",
+    "rssi_range_2s",
+    "rssi_last",
+    "rssi_delta_2s",
+    "rssi_slope_2s",
+    "packet_loss_past_2s",
+    "throughput_past_2s",
+    "inter_arrival_mean_2s",
+    "jitter_2s",
+    "entropy_rssi_2s",
+    "payload_size",
+    "packet_rate"
+  ],
+  "numeric_feature_columns": [
+    "rssi_mean_2s",
+    "rssi_min_2s",
+    "rssi_max_2s",
+    "rssi_std_2s",
+    "rssi_range_2s",
+    "rssi_last",
+    "rssi_delta_2s",
+    "rssi_slope_2s",
+    "packet_loss_past_2s",
+    "throughput_past_2s",
+    "inter_arrival_mean_2s",
+    "jitter_2s",
+    "entropy_rssi_2s",
+    "payload_size",
+    "packet_rate"
+  ],
+  "categorical_feature_columns": [],
+  "feature_defaults": {
+    "rssi_mean_2s": -85.7692,
+    "rssi_min_2s": -93.0,
+    "rssi_max_2s": -80.0,
+    "rssi_std_2s": 2.56423,
+    "rssi_range_2s": 11.0,
+    "rssi_last": -86.0,
+    "rssi_delta_2s": 0.0,
+    "rssi_slope_2s": 0.0132843,
+    "packet_loss_past_2s": 7.31707,
+    "throughput_past_2s": 4368.0,
+    "inter_arrival_mean_2s": 51.0526,
+    "jitter_2s": 15.6347,
+    "entropy_rssi_2s": 3.06293,
+    "payload_size": 28.0,
+    "packet_rate": 20.0
+  },
+  "dropped_empty_features": [
+    "link_margin"
+  ],
+  "trace_columns": [
+    "scenario_id",
+    "window_start",
+    "window_end"
+  ],
+  "state_thresholds": {
+    "Good": "packet_loss < 10%",
+    "Critical": "packet_loss >= 10%"
+  }
+}

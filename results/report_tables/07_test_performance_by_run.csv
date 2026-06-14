@@ -1,0 +1,5 @@
+scenario_id,rows,actual_loss_mean_pct,predicted_loss_mean_pct,mae,rmse,binary_state_accuracy,actual_good_rows,predicted_good_rows,actual_critical_rows,predicted_critical_rows
+run02,592,0.0,1.967,1.967,2.327,1.0,592,592,0,0
+run03,593,0.034,1.92,1.913,2.274,1.0,593,593,0,0
+run14,980,0.0,16.925,16.925,21.097,0.3694,980,362,0,618
+run50,763,22.456,20.519,7.166,8.959,0.962,16,15,747,748
