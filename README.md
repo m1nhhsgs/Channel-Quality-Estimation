@@ -1,15 +1,16 @@
 # Channel Quality Estimation
 
-Du an nay xay dung he thong do, ghi log, trich xuat dac trung va du doan chat
-luong kenh truyen ESP-NOW giua hai board ESP32. Mo hinh hien tai dung XGBoost
-de du doan `packet_loss_future_2s`, sau do quy doi thanh 2 trang thai:
+This project measures, logs, processes, and predicts ESP-NOW channel quality
+between two ESP32 boards. The current machine learning model is an XGBoost
+regressor that predicts `packet_loss_future_2s`. The numeric prediction is then
+mapped to two channel states:
 
 ```text
 Good:     packet_loss_future_2s < 10%
 Critical: packet_loss_future_2s >= 10%
 ```
 
-He thong gom 4 phan chinh:
+The system has four main stages:
 
 ```text
 ESP32 TX/RX firmware  ->  Serial raw log
@@ -18,13 +19,13 @@ Feature extraction    ->  data/features/ml_dataset.csv
 XGBoost + GUI         ->  prediction, metrics, replay/live monitoring
 ```
 
-## Ket qua hien tai
+## Current Results
 
-Model hien tai la XGBoost regressor khong dung metadata tu `data/sessions.csv`.
-Model van du doan gia tri packet loss dang so, con trang thai `Good/Critical`
-duoc suy ra bang nguong 10%.
+The current model is an XGBoost regressor without session metadata from
+`data/sessions.csv`. It predicts the packet loss percentage directly, while the
+`Good/Critical` state is derived from the 10% threshold.
 
-Ket qua tren test set hien tai:
+Current test-set results:
 
 ```text
 Feature rows:          11511
@@ -47,7 +48,7 @@ Actual Good         1548           633
 Actual Critical       14           733
 ```
 
-Bang ket qua de dua vao bao cao/slide nam tai:
+Report and slide tables are available at:
 
 ```text
 results/report_tables/report_tables.md
@@ -55,33 +56,31 @@ results/report_tables/report_tables.html
 results/report_tables/*.csv
 ```
 
-## Cau truc thu muc
+## Project Structure
 
 ```text
-configs/              Cau hinh experiment/model
-firmware/             Firmware ESP32 TX/RX va mo ta packet format
-python/acquisition/   Script ghi log Serial tu RX
-python/processing/    Trich xuat feature va tinh metric realtime
-python/ml/            Train, predict, split dataset va runtime predictor
-python/gui/           GUI replay/live
-data/raw/             Raw CSV log tu RX
-data/features/        Dataset feature cho ML
-models/               XGBoost model va model_config
-results/              Metrics, predictions, figures va report tables
-docs/                 Tai lieu huong dan chay he thong
+configs/              Experiment and model configuration
+firmware/             ESP32 TX/RX firmware and packet-format notes
+python/acquisition/   Serial logging script
+python/processing/    Feature extraction and realtime metric helpers
+python/ml/            Training, prediction, dataset split, runtime predictor
+python/gui/           Replay/live GUI application
+data/raw/             Raw CSV logs from the receiver
+data/features/        Machine learning feature dataset
+models/               XGBoost model artifacts and model_config
+results/              Metrics, predictions, figures, and report tables
+docs/                 Additional system documentation
 ```
 
-## Yeu cau moi truong
+## Requirements
 
-Can Python 3 va cac thu vien trong `requirements.txt`.
-
-Cai dependencies:
+Install Python dependencies:
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-Kiem tra nhanh:
+Quick dependency check:
 
 ```bash
 python3 - <<'PY'
@@ -90,53 +89,54 @@ print("dependencies ok")
 PY
 ```
 
-## Firmware ESP32
+## ESP32 Firmware
 
-Firmware hien tai giu format cu dang dung trong du an.
+The current firmware keeps the legacy packet and serial-log format used by the
+project.
 
-Nap TX:
+Flash the TX board with:
 
 ```text
 firmware/tx_espnow/espnow_sender.ino
 ```
 
-Nap RX:
+Flash the RX board with:
 
 ```text
 firmware/rx_espnow/espnow_receiver.ino
 ```
 
-Can kiem tra:
+Check these firmware settings:
 
 ```cpp
 const uint8_t espNowChannel = 1;
 const uint32_t sendIntervalMs = 50;
 ```
 
-`sendIntervalMs = 50` tuong duong 20 packet/s. MAC peer trong TX phai la MAC
-cua board RX.
+`sendIntervalMs = 50` means 20 packets per second. The TX peer MAC address must
+match the RX board MAC address.
 
-RX in ra Serial theo format:
+The RX board prints serial lines in this format:
 
 ```csv
 RX,session_id,rx_ms_receiver,src_mac,dst_mac,seq,tx_ms_sender,gap,total_missing,name,value,rssi_dbm,noise_floor_dbm,snr_db,channel,sig_mode,mcs,rate
 ```
 
-Chi tiet format nam tai:
+Packet details are documented in:
 
 ```text
 firmware/packet_format.md
 ```
 
-## Thu du lieu raw
+## Raw Data Collection
 
-Cam board RX vao may, tim Serial port:
+Connect the RX board and find the serial port:
 
 ```bash
 ls /dev/ttyUSB* /dev/ttyACM*
 ```
 
-Vi du ghi mot session 6000 packet:
+Example command for logging one 6000-packet session:
 
 ```bash
 python3 python/acquisition/serial_logger.py \
@@ -152,26 +152,26 @@ python3 python/acquisition/serial_logger.py \
   --expected-packets 6000
 ```
 
-Output mac dinh:
+Default outputs:
 
 ```text
 data/raw/run01.csv
 data/sessions.csv
 ```
 
-Neu gap loi permission voi `/dev/ttyUSB0`:
+If `/dev/ttyUSB0` fails with a permission error:
 
 ```bash
 sudo usermod -aG dialout $USER
 newgrp dialout
 ```
 
-Khong mo Serial Monitor va logger cung luc, vi mot Serial port chi nen co mot
-chuong trinh doc.
+Do not open Serial Monitor and the logger at the same time. A serial port should
+only be read by one program at a time.
 
-## Trich xuat dac trung
+## Feature Extraction
 
-Tao dataset feature tu tat ca raw CSV:
+Create the machine learning dataset from all raw CSV logs:
 
 ```bash
 python3 python/processing/feature_extraction.py 'data/raw/*.csv' \
@@ -181,7 +181,7 @@ python3 python/processing/feature_extraction.py 'data/raw/*.csv' \
   --payload-size 28
 ```
 
-Thong so feature window hien tai:
+Current sliding-window settings:
 
 ```text
 window_size = 2.0s
@@ -190,7 +190,7 @@ horizon     = 2.0s
 target      = packet_loss_future_2s
 ```
 
-Feature chinh:
+Current model features:
 
 ```text
 rssi_mean_2s
@@ -210,12 +210,12 @@ payload_size
 packet_rate
 ```
 
-Trong do `entropy_rssi_2s` la dac trung lien quan den ly thuyet thong tin,
-dung de mo ta muc do bien dong cua RSSI trong cua so 2 giay.
+`entropy_rssi_2s` is the main information-theory-related feature. It describes
+how much the RSSI values vary within a 2-second window.
 
-## Train model
+## Model Training
 
-Train lai XGBoost tu dataset feature:
+Train the XGBoost model from the feature dataset:
 
 ```bash
 python3 python/ml/train_xgboost_model.py data/features/ml_dataset.csv \
@@ -228,7 +228,7 @@ python3 python/ml/train_xgboost_model.py data/features/ml_dataset.csv \
   --learning-rate 0.05
 ```
 
-Output:
+Training outputs:
 
 ```text
 models/xgboost_packet_loss_pipeline.joblib
@@ -240,16 +240,17 @@ results/feature_importance.csv
 results/figures/*.png
 ```
 
-`models/model_config.json` dinh nghia feature order, target va nguong trang thai:
+`models/model_config.json` defines the feature order, prediction target, and
+state thresholds:
 
 ```text
 Good:     packet_loss < 10%
 Critical: packet_loss >= 10%
 ```
 
-## Predict offline
+## Offline Prediction
 
-Chay du doan tren feature CSV:
+Run prediction on an extracted feature CSV:
 
 ```bash
 python3 python/ml/predict_xgboost_model.py data/features/ml_dataset.csv \
@@ -258,40 +259,40 @@ python3 python/ml/predict_xgboost_model.py data/features/ml_dataset.csv \
   --config models/model_config.json
 ```
 
-Output quan trong:
+Important output columns:
 
 ```text
 predicted_packet_loss_future_2s
 predicted_state
 ```
 
-## GUI replay
+## GUI Replay Mode
 
-Chay GUI voi CSV da thu:
+Run the GUI with a collected CSV:
 
 ```bash
 python3 python/gui/gui_app.py --csv data/raw/run02.csv
 ```
 
-GUI hien thi:
+The GUI displays:
 
 ```text
 RSSI
-Packet loss hien tai
-Packet loss du doan 2 giay toi
+Current packet loss
+Predicted packet loss for the next 2 seconds
 Throughput
 Jitter
-Entropy RSSI
+RSSI entropy
 Link margin
-Trang thai Good/Critical
+Good/Critical channel state
 ```
 
-Neu model khong load duoc, GUI se dung heuristic fallback va hien thi loi tren
-thanh trang thai model.
+If the model cannot be loaded, the GUI uses a heuristic fallback and shows the
+model error in the status area.
 
-## GUI live
+## GUI Live Mode
 
-Cam RX da nap firmware, dam bao TX dang phat, roi chay:
+Connect the RX board, make sure the TX board is transmitting, then run:
 
 ```bash
 python3 python/gui/gui_app.py \
@@ -303,22 +304,22 @@ python3 python/gui/gui_app.py \
   --scenario-id live_demo
 ```
 
-## Tao bang bao cao/slide
+## Report and Slide Tables
 
-Bang ket qua hien tai da duoc tao trong:
+Current report tables are available in:
 
 ```text
 results/report_tables/
 ```
 
-File nen dung:
+Recommended files:
 
 ```text
 results/report_tables/report_tables.md
 results/report_tables/report_tables.html
 ```
 
-Cac CSV rieng:
+Individual CSV tables:
 
 ```text
 01_dataset_overview.csv
@@ -333,13 +334,13 @@ Cac CSV rieng:
 10_feature_dataset_by_run.csv
 ```
 
-Hinh ket qua nam trong:
+Figures are stored in:
 
 ```text
 results/figures/
 ```
 
-Quan trong nhat:
+Most useful figures:
 
 ```text
 results/figures/results.png
@@ -349,15 +350,15 @@ results/figures/prediction_vs_actual.png
 results/figures/residual_histogram.png
 ```
 
-## Lenh kiem tra nhanh
+## Quick Checks
 
-Kiem tra syntax Python:
+Check Python syntax:
 
 ```bash
 python3 -m compileall python
 ```
 
-Kiem tra feature extraction voi mot run:
+Check feature extraction on one run:
 
 ```bash
 python3 python/processing/feature_extraction.py data/raw/run02.csv \
@@ -365,7 +366,7 @@ python3 python/processing/feature_extraction.py data/raw/run02.csv \
   --include-labels
 ```
 
-Kiem tra predict:
+Check prediction:
 
 ```bash
 python3 python/ml/predict_xgboost_model.py /tmp/run02_features.csv \
@@ -374,7 +375,7 @@ python3 python/ml/predict_xgboost_model.py /tmp/run02_features.csv \
   --config models/model_config.json
 ```
 
-Kiem tra GUI offscreen:
+Check GUI startup in offscreen mode:
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 - <<'PY'
@@ -408,12 +409,12 @@ app.quit()
 PY
 ```
 
-## Ghi chu danh gia
+## Evaluation Notes
 
-Model hien tai du doan duoc xu huong packet loss nhung `R2` van am, nghia la
-kha nang tong quat sang mot so run test con han che. Tuy vay, khi quy ve 2 lop
-`Good/Critical`, recall cua lop `Critical` rat cao, phu hop voi bai toan can
-phat hien som tinh trang kenh xau.
+The current model captures packet-loss trends, but `R2` is still negative. This
+means generalization to some held-out runs is limited. However, after converting
+the output to the binary `Good/Critical` state, the `Critical` recall is high,
+which is useful for detecting poor channel conditions early.
 
-Neu muon cai thien tiep, nen thu them du lieu that o cac dieu kien trung gian,
-dac biet cac run co packet loss gan nguong 10%.
+The most useful next improvement is collecting more real data near the 10%
+packet-loss threshold.
