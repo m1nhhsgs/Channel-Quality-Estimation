@@ -182,6 +182,10 @@ python3 python/gui/gui_app.py --live --port /dev/ttyUSB0 --baud 115200 --packet-
 GUI se doc truc tiep Serial tu RX. Khong mo Serial Monitor hoac logger cung luc,
 vi moi port Serial chi nen co mot chuong trinh dang doc.
 
+Neu RX khong nhan duoc packet moi trong khoang 1.5 giay, GUI se hien thi
+`Disconnected`. Khi packet quay lai, GUI tu cap nhat lai trang thai kenh ma
+khong can bam reconnect.
+
 ## 9. Cac file chinh
 
 ```text

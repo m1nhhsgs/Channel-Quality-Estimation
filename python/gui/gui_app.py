@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from dataclasses import replace
 from pathlib import Path
 
@@ -30,7 +31,7 @@ from python.processing.realtime_metrics import (
 )
 
 
-DEFAULT_CSV = PROJECT_ROOT / "demo" / "replay_samples" / "sample_replay.csv"
+DEFAULT_CSV = PROJECT_ROOT / "data" / "raw" / "run02.csv"
 DEFAULT_MODEL = PROJECT_ROOT / "models" / "xgboost_packet_loss_pipeline.joblib"
 DEFAULT_CONFIG = PROJECT_ROOT / "models" / "model_config.json"
 
@@ -86,6 +87,10 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
         self.replay_index = 0
         self.window_size_ms = 2000.0
         self.history_ms = 60000.0
+        self.live_timeout_sec = 1.5
+        self.stream_start_ms: float | None = None
+        self.last_live_packet_wall_time: float | None = None
+        self.live_signal_lost = False
 
         self.replay_timer = QtCore.QTimer(self)
         self.replay_timer.timeout.connect(self.advance_replay)
@@ -328,6 +333,8 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
         self.replay_timer.stop()
         self.replay_index = 0
         self.visible_records = []
+        self.stream_start_ms = None
+        self.live_signal_lost = False
         self.time_values = []
         self.rssi_values = []
         self.loss_values = []
@@ -335,6 +342,8 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
         self.rssi_curve.setData([], [])
         self.loss_curve.setData([], [])
         self.predicted_loss_curve.setData([], [])
+        self.rssi_plot.enableAutoRange(axis=pg.ViewBox.XAxis)
+        self.loss_plot.enableAutoRange(axis=pg.ViewBox.XAxis)
         self.update_metric_cards(calculate_metrics([]))
         self.progress_label.setText(f"Rows: 0 / {len(self.records)}")
         self.scenario_label.setText("Scenario: --")
@@ -360,9 +369,11 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
             self.records = []
             self.reset_stream()
             self.serial_conn = serial.Serial(port, baudrate, timeout=0)
+            self.last_live_packet_wall_time = time.monotonic()
+            self.live_signal_lost = False
             self.live_timer.start(50)
             self.file_label.setText(f"Live: {port} @ {baudrate}")
-            self.statusBar().showMessage("Live serial connected")
+            self.statusBar().showMessage("Live serial connected, waiting for packets")
         except Exception as exc:  # noqa: BLE001 - show GUI-friendly error.
             QtWidgets.QMessageBox.critical(self, "Cannot open serial port", str(exc))
 
@@ -374,12 +385,19 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
             except Exception:
                 pass
             self.serial_conn = None
+        self.last_live_packet_wall_time = None
+        self.live_signal_lost = False
 
     def poll_live_serial(self) -> None:
         if self.serial_conn is None:
             return
+        received_packet = False
         for _ in range(100):
-            raw = self.serial_conn.readline()
+            try:
+                raw = self.serial_conn.readline()
+            except Exception as exc:  # noqa: BLE001 - serial disconnects surface here.
+                self.handle_live_serial_error(exc)
+                return
             if not raw:
                 break
             line = raw.decode("utf-8", errors="replace").strip()
@@ -392,7 +410,39 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
                 default_packet_rate=self.default_packet_rate,
             )
             if record is not None:
+                received_packet = True
                 self.add_record(record)
+        if received_packet:
+            self.last_live_packet_wall_time = time.monotonic()
+            if self.live_signal_lost:
+                self.live_signal_lost = False
+                self.statusBar().showMessage("Live serial receiving packets")
+        else:
+            self.check_live_timeout()
+
+    def check_live_timeout(self) -> None:
+        if self.serial_conn is None or self.last_live_packet_wall_time is None:
+            return
+        elapsed_sec = time.monotonic() - self.last_live_packet_wall_time
+        if elapsed_sec >= self.live_timeout_sec:
+            self.mark_live_disconnected(elapsed_sec)
+
+    def handle_live_serial_error(self, exc: Exception) -> None:
+        self.mark_live_disconnected(self.live_timeout_sec, error=str(exc))
+        self.disconnect_live()
+
+    def mark_live_disconnected(self, elapsed_sec: float, error: str | None = None) -> None:
+        if self.live_signal_lost:
+            return
+        self.live_signal_lost = True
+        self.set_channel_state("Disconnected")
+        self.set_metric_cards_unavailable()
+        if not self.records:
+            self.progress_label.setText(f"Rows: {len(self.visible_records)} live (signal lost)")
+        if error:
+            self.statusBar().showMessage(f"Live serial disconnected: {error}")
+        else:
+            self.statusBar().showMessage(f"No live packets for {elapsed_sec:.1f}s")
 
     def advance_replay(self) -> None:
         if self.replay_index >= len(self.records):
@@ -406,6 +456,13 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
         self.progress_label.setText(f"Rows: {self.replay_index} / {len(self.records)}")
 
     def add_record(self, record: PacketRecord) -> None:
+        if self.serial_conn is not None:
+            was_signal_lost = self.live_signal_lost
+            self.last_live_packet_wall_time = time.monotonic()
+            self.live_signal_lost = False
+            if was_signal_lost:
+                self.statusBar().showMessage("Live serial receiving packets")
+
         self.visible_records.append(record)
         self.visible_records = [
             item
@@ -440,28 +497,55 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
             self.progress_label.setText(f"Rows: {len(self.visible_records)} live")
 
     def append_chart_values(self, record: PacketRecord, metrics: MetricSnapshot) -> None:
-        if self.visible_records:
-            start_time = self.visible_records[0].rx_time_ms
-        elif self.records:
-            start_time = self.records[0].rx_time_ms
-        else:
-            start_time = record.rx_time_ms
+        if self.stream_start_ms is None:
+            self.stream_start_ms = record.rx_time_ms
 
-        time_sec = (record.rx_time_ms - start_time) / 1000.0
+        time_sec = max(0.0, (record.rx_time_ms - self.stream_start_ms) / 1000.0)
         self.time_values.append(time_sec)
         self.rssi_values.append(record.rssi)
         self.loss_values.append(metrics.packet_loss_percent)
         self.predicted_loss_values.append(metrics.predicted_loss_percent)
 
+        min_visible_time = max(0.0, time_sec - self.history_ms / 1000.0)
+        points = [
+            point
+            for point in zip(
+                self.time_values,
+                self.rssi_values,
+                self.loss_values,
+                self.predicted_loss_values,
+            )
+            if point[0] >= min_visible_time
+        ]
+
         max_points = 1200
-        self.time_values = self.time_values[-max_points:]
-        self.rssi_values = self.rssi_values[-max_points:]
-        self.loss_values = self.loss_values[-max_points:]
-        self.predicted_loss_values = self.predicted_loss_values[-max_points:]
+        points = points[-max_points:]
+        if points:
+            (
+                self.time_values,
+                self.rssi_values,
+                self.loss_values,
+                self.predicted_loss_values,
+            ) = [list(values) for values in zip(*points)]
+        else:
+            self.time_values = []
+            self.rssi_values = []
+            self.loss_values = []
+            self.predicted_loss_values = []
 
         self.rssi_curve.setData(self.time_values, self.rssi_values)
         self.loss_curve.setData(self.time_values, self.loss_values)
         self.predicted_loss_curve.setData(self.time_values, self.predicted_loss_values)
+        self.update_plot_x_range(time_sec)
+
+    def update_plot_x_range(self, current_time_sec: float) -> None:
+        history_sec = self.history_ms / 1000.0
+        view_start = max(0.0, current_time_sec - history_sec)
+        view_end = max(5.0, current_time_sec)
+        if view_end - view_start < 5.0:
+            view_end = view_start + 5.0
+        self.rssi_plot.setXRange(view_start, view_end, padding=0)
+        self.loss_plot.setXRange(view_start, view_end, padding=0)
 
     def update_metric_cards(self, metrics: MetricSnapshot) -> None:
         self.cards["rssi"].set_value(f"{metrics.rssi_mean:.1f}")
@@ -474,10 +558,15 @@ class ChannelMonitorWindow(QtWidgets.QMainWindow):
         self.cards["rate"].set_value(f"{metrics.packet_rate_hz:.1f}")
         self.set_channel_state(metrics.channel_state)
 
+    def set_metric_cards_unavailable(self) -> None:
+        for card in self.cards.values():
+            card.set_value("--")
+
     def set_channel_state(self, state: str) -> None:
         colors = {
             "Good": "#15803d",
             "Critical": "#b91c1c",
+            "Disconnected": "#475569",
         }
         self.state_label.setText(state)
         self.state_label.setStyleSheet(f"background: {colors.get(state, '#475569')};")
